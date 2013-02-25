@@ -3020,6 +3020,14 @@ abstract public class ToStream extends SerializerBase
             index = m_attributes.getIndex(rawName);
         else {
             index = m_attributes.getIndex(uri, localName);
+            /*
+             * SAX parser sometimes returns attributes with no 
+             * uri and localName defined. In such situation 
+             * attribute may be already defined but it is 
+             * not accessible querying by uri and localName
+             */
+            if(index < 0)
+            	index = m_attributes.getIndex(rawName);
         }
 
         if (index >= 0)
