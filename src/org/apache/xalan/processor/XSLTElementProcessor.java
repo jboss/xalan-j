@@ -22,12 +22,12 @@ package org.apache.xalan.processor;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Vector;
 
 import javax.xml.transform.TransformerException;
 
 import org.apache.xalan.res.XSLMessages;
 import org.apache.xalan.res.XSLTErrorResources;
+import org.apache.xalan.templates.ElemLiteralResult;
 import org.apache.xalan.templates.ElemTemplateElement;
 import org.apache.xml.utils.IntStack;
 import org.xml.sax.Attributes;
@@ -341,7 +341,14 @@ public class XSLTElementProcessor extends ElemTemplateElement
         //handle secure processing
         if(handler.getStylesheetProcessor()==null)
             System.out.println("stylesheet processor null");
-        if(attrDef.getName().compareTo("*")==0 && handler.getStylesheetProcessor().isSecureProcessing())
+
+        boolean namespaceDecl = org.apache.xalan.templates.Constants.S_XMLNAMESPACEURI.equals(attrUri)
+                             || "http://www.w3.org/2000/xmlns/".equals(attrUri);
+        boolean specialOrNonLiteral = !(target instanceof ElemLiteralResult)
+                                   || isSpecialNamespace((((ElemLiteralResult) target).getNamespace()));
+
+        if(handler.getStylesheetProcessor().isSecureProcessing() && attrDef.getName().compareTo("*") == 0
+           && !namespaceDecl && (specialOrNonLiteral || isSpecialNamespace(attrUri)))
         {
             //foreign attributes are not allowed in secure processing mode
             // Then barf, because this element does not allow this attribute.
@@ -393,5 +400,14 @@ public class XSLTElementProcessor extends ElemTemplateElement
     }
 
     return undefines;
+  }
+
+  private boolean isSpecialNamespace(String ns) {
+    // Check if the specified namespace URI is one that indicates an attribute or element might have a special meaning for Xalan
+    // We will reject the Saxon internal namespace as well, just in case
+    return "http://xml.apache.org/xalan".equals(ns)
+        || "http://xml.apache.org/xslt".equals(ns)
+        || "http://icl.com/saxon".equals(ns)
+        || "http://www.w3.org/1999/XSL/Transform".equals(ns);
   }
 }
