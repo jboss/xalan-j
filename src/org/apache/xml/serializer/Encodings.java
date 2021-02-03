@@ -25,6 +25,7 @@ import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.io.UnsupportedEncodingException;
 import java.io.Writer;
+import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.Enumeration;
 import java.util.Hashtable;
@@ -340,6 +341,9 @@ public final class Encodings extends Object
             for (int i = 0; i < totalEntries; ++i)
             {
                 String javaName = (String) keys.nextElement();
+                if (!Charset.isSupported(javaName)) {
+                    continue; // Not all JDKs support all encodings specified in our config
+                }
                 String val = props.getProperty(javaName);
                 int len = lengthOfMimeNames(val);
 
